@@ -100,7 +100,7 @@ static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_pixe
 }
 
 lv_disp_t *lv_sdl_display_init(SDL_Window *window, int width, int height) {
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     lv_disp_draw_buf_t *buf = malloc(sizeof(lv_disp_draw_buf_t));
     lv_disp_draw_buf_init(buf, renderer, NULL, width * height);
     lv_disp_drv_t *driver = malloc(sizeof(lv_disp_drv_t));
