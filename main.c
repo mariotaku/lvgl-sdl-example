@@ -46,10 +46,6 @@ int main(int argc, char *argv[]) {
                     break;
             }
         }
-        lv_task_handler();
-//        SDL_RenderClear(renderer);
-//        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
-        SDL_RenderPresent((SDL_Renderer *) disp->driver->draw_buf->buf_act);
 
         for (int i = 0; i < 40; i++) {
             for (int j = 0; j < 22; j++) {
@@ -57,6 +53,12 @@ int main(int argc, char *argv[]) {
                 lv_label_set_text_fmt(label, "%d", SDL_GetTicks() % 1000);
             }
         }
+
+        lv_task_handler();
+//        SDL_RenderClear(renderer);
+//        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
+        SDL_RenderPresent((SDL_Renderer *) disp->driver->draw_buf->buf_act);
+
 
         Uint32 end_ticks = SDL_GetTicks();
         if ((end_ticks - fps_ticks) >= 1000) {
