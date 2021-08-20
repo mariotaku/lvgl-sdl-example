@@ -9,7 +9,7 @@ lv_disp_t *lv_sdl_display_init();
 
 void lv_sdl_display_deinit(lv_disp_t *);
 
-#define WINDOW_TITLE "LVGL Sample"
+#define WINDOW_TITLE "LVGL Sample [HW]"
 
 int main(int argc, char *argv[]) {
     (void) argc;
