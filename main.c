@@ -20,8 +20,17 @@ int main(int argc, char *argv[]) {
     int width = 1920, height = 1080;
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+
+    SDL_Texture *framebuffer = SDL_CreateTexture(renderer,
+                                                 (LV_COLOR_DEPTH == 32) ? (SDL_PIXELFORMAT_ARGB8888)
+                                                 : (SDL_PIXELFORMAT_RGB565),
+                                                 SDL_TEXTUREACCESS_STREAMING,
+                                                 width,
+                                                 height);
+
     lv_init();
-    lv_disp_t *disp = lv_sdl_display_init(window, width, height);
+    lv_disp_t *disp = lv_sdl_display_init(framebuffer, width, height);
 
     lv_obj_t *scr = lv_scr_act();
     lv_obj_t *labels[40 * 22];
@@ -37,6 +46,7 @@ int main(int argc, char *argv[]) {
     while (running) {
 
         static Uint32 fps_ticks = 0, framecount = 0;
+        Uint32 start_ticks = SDL_GetTicks();
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -46,17 +56,17 @@ int main(int argc, char *argv[]) {
                     break;
             }
         }
-        lv_task_handler();
-//        SDL_RenderClear(renderer);
-//        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
-        SDL_RenderPresent((SDL_Renderer *) disp->driver->draw_buf->buf_act);
-
         for (int i = 0; i < 40; i++) {
             for (int j = 0; j < 22; j++) {
                 lv_obj_t *label = labels[i * 22 + j];
                 lv_label_set_text_fmt(label, "%d", SDL_GetTicks() % 1000);
             }
         }
+
+        lv_task_handler();
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
+        SDL_RenderPresent(renderer);
 
         Uint32 end_ticks = SDL_GetTicks();
         if ((end_ticks - fps_ticks) >= 1000) {
@@ -70,7 +80,9 @@ int main(int argc, char *argv[]) {
         }
     }
     lv_sdl_display_deinit(disp);
-//    lv_deinit();
+    //    lv_deinit();
+    SDL_DestroyTexture(framebuffer);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     return 0;
 }
@@ -81,10 +93,12 @@ static void display_wait_cb(lv_disp_drv_t *disp_drv) {
     //          User can execute very simple tasks here or yield the task
 }
 
-static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_pixels_t src) {
+static void sdl_fb_flush(lv_disp_drv_t *disp_drv,
+                         const lv_area_t *area,
+                         lv_color_t *color_p) {
 
     if (area->x2 < 0 || area->y2 < 0 ||
-        area->x1 > disp_drv->hor_res - 1 || area->y1 > disp_drv->ver_res - 1) {
+    area->x1 > disp_drv->hor_res - 1 || area->y1 > disp_drv->ver_res - 1) {
         lv_disp_flush_ready(disp_drv);
         return;
     }
@@ -94,13 +108,14 @@ static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_pixe
     r.w = area->x2 - area->x1 + 1;
     r.h = area->y2 - area->y1 + 1;
 
+    SDL_UpdateTexture((SDL_Texture *) disp_drv->user_data, &r, color_p, r.w * ((LV_COLOR_DEPTH + 7) / 8));
+
     lv_disp_flush_ready(disp_drv);
 }
 
-lv_disp_t *lv_sdl_display_init(SDL_Window *window, int width, int height) {
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+lv_disp_t *lv_sdl_display_init(SDL_Texture *framebuffer, int width, int height) {
     lv_disp_draw_buf_t *buf = malloc(sizeof(lv_disp_draw_buf_t));
-    lv_disp_draw_buf_init(buf, renderer, NULL, width * height);
+    lv_disp_draw_buf_init(buf, malloc(width * height * sizeof(lv_color_t)), NULL, width * height);
     lv_disp_drv_t *driver = malloc(sizeof(lv_disp_drv_t));
     lv_disp_drv_init(driver);
     driver->draw_buf = buf;
@@ -108,15 +123,15 @@ lv_disp_t *lv_sdl_display_init(SDL_Window *window, int width, int height) {
     driver->flush_cb = sdl_fb_flush;
     driver->hor_res = width;
     driver->ver_res = height;
-    driver->user_data = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
-                                          width, height);
+    driver->user_data = framebuffer;
 
     return lv_disp_drv_register(driver);
 }
 
 void lv_sdl_display_deinit(lv_disp_t *disp) {
-    SDL_DestroyTexture((SDL_Texture *) disp->driver->user_data);
-    SDL_DestroyRenderer((SDL_Renderer *) disp->driver->draw_buf->buf1);
+    void *buf1 = disp->driver->draw_buf->buf1, *buf2 = disp->driver->draw_buf->buf2;
+    if (buf1) free(buf1);
+    if (buf2) free(buf2);
     free(disp->driver->draw_buf);
     free(disp->driver);
 }
