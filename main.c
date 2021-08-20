@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "lvgl.h"
 
@@ -27,9 +27,10 @@ int main(int argc, char *argv[]) {
     lv_obj_t *labels[40 * 22];
     for (int i = 0; i < 40; i++) {
         for (int j = 0; j < 22; j++) {
-            lv_obj_t *label = lv_label_create(scr);
-            lv_obj_set_size(label, 40, 40);
-            lv_obj_set_pos(label, i * 48, j * 48);
+            lv_obj_t *btn = lv_btn_create(scr);
+            lv_obj_t *label = lv_label_create(btn);
+            lv_obj_set_size(btn, 40, 40);
+            lv_obj_set_pos(btn, i * 48, j * 48);
             labels[i * 22 + j] = label;
         }
     }
