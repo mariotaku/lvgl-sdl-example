@@ -9,7 +9,7 @@ lv_disp_t *lv_sdl_display_init();
 
 void lv_sdl_display_deinit(lv_disp_t *);
 
-#define WINDOW_TITLE "LVGL Sample"
+#define WINDOW_TITLE "LVGL Sample [SW]"
 
 int main(int argc, char *argv[]) {
     (void) argc;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     int width = 1920, height = 1080;
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
     SDL_Texture *framebuffer = SDL_CreateTexture(renderer,
                                                  (LV_COLOR_DEPTH == 32) ? (SDL_PIXELFORMAT_ARGB8888)
