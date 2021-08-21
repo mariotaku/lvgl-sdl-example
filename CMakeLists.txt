@@ -34,6 +34,10 @@ target_compile_definitions(lvgl PUBLIC LV_CONF_PATH=${CMAKE_SOURCE_DIR}/lv_conf.
 target_link_libraries(lvgl PRIVATE ${SDL2_LIBRARIES})
 target_include_directories(lvgl PUBLIC ${SDL2_INCLUDE_DIRS})
 
+add_subdirectory(lv_demos)
+target_link_libraries(lv_examples lvgl)
+target_compile_definitions(lv_examples PUBLIC LV_LVGL_H_INCLUDE_SIMPLE=1)
+
 add_executable(example main.c)
-target_link_libraries(example PRIVATE ${SDL2_LIBRARIES} lvgl)
+target_link_libraries(example PRIVATE ${SDL2_LIBRARIES} lvgl lv_examples)
 target_include_directories(example PUBLIC ${SDL2_INCLUDE_DIRS})
