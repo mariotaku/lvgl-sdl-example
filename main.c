@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         return 1;
     }
-    int width = 800, height = 480;
+    int width = 1280, height = 720;
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
     lv_sdl_init_pointer_input();
     lv_gpu_sdl2_renderer_init();
 
-    lv_demo_hw_accel();
-//    lv_demo_widgets();
+//    lv_demo_hw_accel();
+    lv_demo_widgets();
 //    lv_demo_music();
 
     while (running) {
