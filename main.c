@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SDL.h>
+#include <gpu/lv_gpu_sdl2_render.h>
 
 #include "lvgl.h"
 
@@ -18,20 +19,23 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     int width = 1920, height = 1080;
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
     lv_init();
     lv_disp_t *disp = lv_sdl_display_init(window, width, height);
+    lv_gpu_sdl2_renderer_init();
 
     lv_obj_t *scr = lv_scr_act();
-    lv_obj_t *labels[40 * 22];
-    for (int i = 0; i < 40; i++) {
-        for (int j = 0; j < 22; j++) {
-//            lv_obj_t *btn = lv_btn_create(scr);
-            lv_obj_t *label = lv_label_create(scr);
-            lv_obj_set_size(label, 40, 40);
-            lv_obj_set_pos(label, i * 48, j * 48);
-            labels[i * 22 + j] = label;
+#define cols 16
+#define rows 9
+    lv_obj_t *labels[cols * rows];
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            lv_obj_t *item = lv_spinner_create(scr, 1000, 60);
+            lv_obj_set_size(item, 100, 100);
+            lv_obj_set_pos(item, col * 120 + 10, row * 120 + 10);
+            labels[row * cols + col] = item;
         }
     }
 
@@ -48,10 +52,10 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        for (int i = 0; i < 40; i++) {
-            for (int j = 0; j < 22; j++) {
-                lv_obj_t *label = labels[i * 22 + j];
-                lv_label_set_text_fmt(label, "%d", SDL_GetTicks() % 1000);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                lv_obj_t *label = labels[row * cols + col];
+                if (!label) continue;
             }
         }
 
@@ -72,6 +76,7 @@ int main(int argc, char *argv[]) {
             framecount++;
         }
     }
+    lv_gpu_sdl2_renderer_deinit();
     lv_sdl_display_deinit(disp);
 //    lv_deinit();
     SDL_DestroyWindow(window);
@@ -111,7 +116,7 @@ lv_disp_t *lv_sdl_display_init(SDL_Window *window, int width, int height) {
     driver->flush_cb = sdl_fb_flush;
     driver->hor_res = width;
     driver->ver_res = height;
-    driver->user_data = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
+    driver->user_data = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB32, SDL_TEXTUREACCESS_STREAMING,
                                           width, height);
 
     return lv_disp_drv_register(driver);
