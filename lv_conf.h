@@ -32,10 +32,6 @@
 /*Images pixels with this color will not be drawn if they are  chroma keyed)*/
 #define LV_COLOR_CHROMA_KEY    lv_color_hex(0x00ff00)         /*pure green*/
 
-#define LV_PIXELS_CUSTOM  1
-#define LV_PIXELS_TYPE         SDL_Renderer*
-#define LV_PIXELS_CUSTOM_INCLUDE <SDL.h>
-
 /*=========================
    MEMORY SETTINGS
  *=========================*/

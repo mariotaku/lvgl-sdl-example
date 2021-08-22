@@ -133,7 +133,8 @@ static void display_wait_cb(lv_disp_drv_t *disp_drv) {
     //          User can execute very simple tasks here or yield the task
 }
 
-static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_pixels_t src) {
+static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *src) {
+    (void) src;
 
     if (area->x2 < 0 || area->y2 < 0 ||
         area->x1 > disp_drv->hor_res - 1 || area->y1 > disp_drv->ver_res - 1) {
