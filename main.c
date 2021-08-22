@@ -1,17 +1,13 @@
 #include <stdio.h>
 #include <SDL.h>
-#include <gpu/lv_gpu_sdl2_render.h>
+#include <gpu/lv_gpu_sdl.h>
 
 #include "lvgl.h"
 #include "lv_demos/lv_demo.h"
 
 static int running = SDL_TRUE;
 
-lv_disp_t *lv_sdl_display_init();
-
 static int app_event_filter(void *userdata, SDL_Event *event);
-
-void lv_sdl_display_deinit(lv_disp_t *);
 
 lv_indev_t *lv_sdl_init_pointer_input(void);
 
@@ -47,17 +43,20 @@ static void lv_demo_hw_accel() {
     }
 }
 
-
-static struct lv_demo_entry_t {
+typedef struct lv_demo_entry_t {
     void (*action)();
 
     const char *title;
-} demo_entries[4] = {
-        {lv_demo_hw_accel,  "Hardware Accel"},
+} lv_demo_entry_t;
+
+static const lv_demo_entry_t demo_entries[4] = {
+        {lv_demo_hw_accel,  "Hardware Accel Playground"},
         {lv_demo_widgets,   "Widgets"},
         {lv_demo_music,     "Music Player"},
         {lv_demo_benchmark, "Benchmark"},
+//        {lv_demo_stress,    "Stress Test"},
 };
+static const size_t demo_entry_size = sizeof(demo_entries) / sizeof(lv_demo_entry_t);
 
 static lv_obj_t *entry_screen;
 
@@ -77,7 +76,7 @@ void lv_demo_entry() {
     lv_obj_t *list = lv_list_create(content);
     lv_obj_set_grid_cell(list, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
 //    lv_obj_set_size(list, lv_obj_get_content_width(lv_scr_act()), lv_obj_get_content_height(lv_scr_act()));
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < demo_entry_size; i++) {
         lv_obj_t *item = lv_list_add_btn(list, LV_SYMBOL_DUMMY, demo_entries[i].title);
         lv_obj_add_event_cb(item, lv_demo_entry_handle_item, LV_EVENT_CLICKED, demo_entries[i].action);
     }
@@ -94,9 +93,8 @@ int main(int argc, char *argv[]) {
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
     lv_init();
-    lv_disp_t *disp = lv_sdl_display_init(window, width, height);
+    lv_disp_t *disp = lv_sdl_display_init(window);
     lv_sdl_init_pointer_input();
-    lv_gpu_sdl2_renderer_init();
 
     lv_demo_entry();
 
@@ -111,7 +109,7 @@ int main(int argc, char *argv[]) {
         Uint32 end_ticks = SDL_GetTicks();
         if ((end_ticks - fps_ticks) >= 1000) {
             static char wintitle[64];
-            sprintf(wintitle, "%s | %d FPS", WINDOW_TITLE, (int) (framecount * 1000.0 / (end_ticks - fps_ticks)));
+            snprintf(wintitle, 64, "%s | %d FPS", WINDOW_TITLE, (int) (framecount * 1000.0 / (end_ticks - fps_ticks)));
             SDL_SetWindowTitle(window, wintitle);
             fps_ticks = end_ticks;
             framecount = 0;
@@ -119,65 +117,12 @@ int main(int argc, char *argv[]) {
             framecount++;
         }
     }
-    lv_gpu_sdl2_renderer_deinit();
     lv_sdl_deinit_pointer_input();
     lv_sdl_display_deinit(disp);
 //    lv_deinit();
     SDL_DestroyWindow(window);
     return 0;
 }
-
-static void display_wait_cb(lv_disp_drv_t *disp_drv) {
-    (void) disp_drv;
-    //OPTIONAL: Called periodically while lvgl waits for an operation to be completed
-    //          User can execute very simple tasks here or yield the task
-}
-
-static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *src) {
-    (void) src;
-
-    if (area->x2 < 0 || area->y2 < 0 ||
-        area->x1 > disp_drv->hor_res - 1 || area->y1 > disp_drv->ver_res - 1) {
-        lv_disp_flush_ready(disp_drv);
-        return;
-    }
-    SDL_Rect r;
-    r.x = area->x1;
-    r.y = area->y1;
-    r.w = area->x2 - area->x1 + 1;
-    r.h = area->y2 - area->y1 + 1;
-
-    if (disp_drv->draw_buf->flushing_last) {
-        SDL_Renderer *renderer = (SDL_Renderer *) disp_drv->draw_buf->buf_act;
-        SDL_RenderPresent(renderer);
-    }
-    lv_disp_flush_ready(disp_drv);
-}
-
-lv_disp_t *lv_sdl_display_init(SDL_Window *window, int width, int height) {
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    lv_disp_draw_buf_t *buf = malloc(sizeof(lv_disp_draw_buf_t));
-    lv_disp_draw_buf_init(buf, renderer, NULL, width * height);
-    lv_disp_drv_t *driver = malloc(sizeof(lv_disp_drv_t));
-    lv_disp_drv_init(driver);
-    driver->draw_buf = buf;
-    driver->wait_cb = display_wait_cb;
-    driver->flush_cb = sdl_fb_flush;
-    driver->hor_res = width;
-    driver->ver_res = height;
-    driver->user_data = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB32, SDL_TEXTUREACCESS_STREAMING,
-                                          width, height);
-
-    return lv_disp_drv_register(driver);
-}
-
-void lv_sdl_display_deinit(lv_disp_t *disp) {
-    SDL_DestroyTexture((SDL_Texture *) disp->driver->user_data);
-    SDL_DestroyRenderer((SDL_Renderer *) disp->driver->draw_buf->buf1);
-    free(disp->driver->draw_buf);
-    free(disp->driver);
-}
-
 
 static void sdl_input_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     (void) drv;
