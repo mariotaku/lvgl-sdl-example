@@ -47,13 +47,49 @@ static void lv_demo_hw_accel() {
     }
 }
 
+
+static struct lv_demo_entry_t {
+    void (*action)();
+
+    const char *title;
+} demo_entries[4] = {
+        {lv_demo_hw_accel,  "Hardware Accel"},
+        {lv_demo_widgets,   "Widgets"},
+        {lv_demo_music,     "Music Player"},
+        {lv_demo_benchmark, "Benchmark"},
+};
+
+static lv_obj_t *entry_screen;
+
+void lv_demo_entry_handle_item(lv_event_t *e) {
+    void (*action)() =(void (*)()) e->user_data;
+    action();
+    lv_obj_del(entry_screen);
+    entry_screen = NULL;
+}
+
+void lv_demo_entry() {
+    entry_screen = lv_win_create(lv_scr_act(), 40);
+    lv_obj_t *content = lv_win_get_content(entry_screen);
+    lv_win_add_title(entry_screen, "LVGL Demos");
+    const static lv_coord_t cells_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    lv_obj_set_grid_dsc_array(content, cells_dsc, cells_dsc);
+    lv_obj_t *list = lv_list_create(content);
+    lv_obj_set_grid_cell(list, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+//    lv_obj_set_size(list, lv_obj_get_content_width(lv_scr_act()), lv_obj_get_content_height(lv_scr_act()));
+    for (int i = 0; i < 4; i++) {
+        lv_obj_t *item = lv_list_add_btn(list, LV_SYMBOL_DUMMY, demo_entries[i].title);
+        lv_obj_add_event_cb(item, lv_demo_entry_handle_item, LV_EVENT_CLICKED, demo_entries[i].action);
+    }
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
     (void) argv;
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         return 1;
     }
-    int width = 1280, height = 720;
+    int width = 1280, height = 800;
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
@@ -62,21 +98,15 @@ int main(int argc, char *argv[]) {
     lv_sdl_init_pointer_input();
     lv_gpu_sdl2_renderer_init();
 
-//    lv_demo_hw_accel();
-    lv_demo_widgets();
-//    lv_demo_music();
+    lv_demo_entry();
 
     while (running) {
-
         static Uint32 fps_ticks = 0, framecount = 0;
 
         SDL_PumpEvents();
         SDL_FilterEvents(app_event_filter, NULL);
         lv_task_handler();
-//        SDL_RenderClear(renderer);
-//        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
-        SDL_RenderPresent((SDL_Renderer *) disp->driver->draw_buf->buf_act);
-
+        SDL_Delay(1);
 
         Uint32 end_ticks = SDL_GetTicks();
         if ((end_ticks - fps_ticks) >= 1000) {
@@ -116,6 +146,10 @@ static void sdl_fb_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_pixe
     r.w = area->x2 - area->x1 + 1;
     r.h = area->y2 - area->y1 + 1;
 
+    if (disp_drv->draw_buf->flushing_last) {
+        SDL_Renderer *renderer = (SDL_Renderer *) disp_drv->draw_buf->buf_act;
+        SDL_RenderPresent(renderer);
+    }
     lv_disp_flush_ready(disp_drv);
 }
 

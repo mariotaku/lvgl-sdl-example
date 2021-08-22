@@ -37,6 +37,8 @@ target_include_directories(lvgl PUBLIC ${SDL2_INCLUDE_DIRS})
 add_subdirectory(lv_demos)
 target_link_libraries(lv_examples lvgl)
 target_compile_definitions(lv_examples PUBLIC LV_LVGL_H_INCLUDE_SIMPLE=1)
+file(GLOB_RECURSE LV_EXAMPLES_ASSETS lvgl/examples/assets/*.c)
+target_sources(lv_examples PRIVATE ${LV_EXAMPLES_ASSETS})
 
 add_executable(example main.c)
 target_link_libraries(example PRIVATE ${SDL2_LIBRARIES} lvgl lv_examples)
