@@ -158,6 +158,21 @@ static int app_event_filter(void *userdata, SDL_Event *event) {
         case SDL_USEREVENT: {
             break;
         }
+        case SDL_WINDOWEVENT: {
+            switch (event->window.event) {
+                case SDL_WINDOWEVENT_EXPOSED: {
+                    lv_obj_invalidate(lv_scr_act());
+                    break;
+                }
+            }
+            break;
+        }
+//        case SDL_RENDER_TARGETS_RESET: {
+//            lv_disp_t *disp = lv_disp_get_default();
+//            SDL_RenderClear((SDL_Renderer *) lv_disp_get_draw_buf(disp)->buf_act);
+//            lv_refr_now(disp);
+//            break;
+//        }
         case SDL_QUIT: {
             running = SDL_FALSE;
             break;
