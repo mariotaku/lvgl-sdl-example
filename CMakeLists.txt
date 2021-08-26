@@ -11,14 +11,14 @@ if (NOT SDL2_FOUND)
     if (MSVC)
         FetchContent_Declare(
                 SDL2
-                URL https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip
-                URL_MD5 3025645afc813bf00b789a34dcc92d42
+                URL https://www.libsdl.org/release/SDL2-devel-2.0.9-VC.zip
+                URL_MD5 22bdb85ce4874673c4fafcce772d8b72
         )
     elseif(MINGW)
         FetchContent_Declare(
                 SDL2
-                URL https://www.libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz
-                URL_MD5 5e0d5dc6d3167c53442623cca9dc6a2e
+                URL https://www.libsdl.org/release/SDL2-devel-2.0.9-mingw.tar.gz
+                URL_MD5 f5645eed64214c3bc22a3e157fc1f15f
         )
     else()
         message(FATAL_ERROR "SDL2 not available")
@@ -44,12 +44,10 @@ file(GLOB_RECURSE LV_EXAMPLES_ASSETS lvgl/examples/assets/*.c)
 target_sources(lv_examples PRIVATE ${LV_EXAMPLES_ASSETS})
 
 add_executable(example main.c input_drv/indev_sdl.c input_drv/syswm_win.c)
-target_link_libraries(example PRIVATE lvgl lv_examples)
+target_link_libraries(example PRIVATE lvgl lv_examples SDL2::SDL2)
 
-if (SDL2MAIN_LIBRARIES)
-    target_link_libraries(example PRIVATE SDL2::SDL2main)
-else()
-    target_link_libraries(example PRIVATE SDL2::SDL2)
+if (MINGW OR MSVC)
+    target_link_libraries(example PUBLIC SDL2::SDL2main)
 endif ()
 
 if (WINHID_FOUND)
