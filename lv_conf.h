@@ -131,7 +131,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #define LV_USE_GPU_NXP_VG_LITE   0
 
 /*Use SDL render API*/
-#define LV_USE_GPU_SDL_RENDER    1
+#define LV_USE_GPU_SDL    1
 
 /*-------------
  * Logging
@@ -187,7 +187,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
  *-----------*/
 
 /*1: Show CPU usage and FPS count in the right bottom corner*/
-#define LV_USE_PERF_MONITOR     1
+#define LV_USE_PERF_MONITOR     0
 
 /*1: Show the used memory and the memory fragmentation  in the left bottom corner
  * Requires LV_MEM_CUSTOM = 0*/
@@ -214,6 +214,8 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #if LV_ENABLE_GC != 0
 #  define LV_GC_INCLUDE "gc.h"                           /*Include Garbage Collector related things*/
 #endif /*LV_ENABLE_GC*/
+
+#define LV_DEFAULT_SCROLL_ELASTIC 1
 
 /*=====================
  *  COMPILER SETTINGS
@@ -287,7 +289,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 
 /*Demonstrate special features*/
 #define LV_FONT_MONTSERRAT_12_SUBPX      0
-#define LV_FONT_MONTSERRAT_28_COMPRESSED 0  /*bpp = 3*/
+#define LV_FONT_MONTSERRAT_28_COMPRESSED 1  /*bpp = 3*/
 #define LV_FONT_DEJAVU_16_PERSIAN_HEBREW 0  /*Hebrew, Arabic, Perisan letters and all their forms*/
 #define LV_FONT_SIMSUN_16_CJK            0  /*1000 most common CJK radicals*/
 
@@ -309,7 +311,7 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
 #define LV_FONT_FMT_TXT_LARGE   0
 
 /*Enables/disables support for compressed fonts.*/
-#define LV_USE_FONT_COMPRESSED  0
+#define LV_USE_FONT_COMPRESSED  1
 
 /*Enable subpixel rendering*/
 #define LV_USE_FONT_SUBPX       0

@@ -4,3 +4,6 @@
 [submodule "lv_demos"]
 	path = lv_demos
 	url = https://github.com/lvgl/lv_demos.git
+[submodule "cmake-modules"]
+	path = cmake-modules
+	url = https://github.com/rpavlik/cmake-modules.git

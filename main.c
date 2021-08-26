@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <SDL.h>
-#include <gpu/lv_gpu_sdl.h>
 
+#include "gpu/lv_gpu_sdl.h"
 #include "lvgl.h"
 #include "lv_demos/lv_demo.h"
+#include "input_drv/indev_sdl.h"
+
 
 static int running = SDL_TRUE;
 
 static int app_event_filter(void *userdata, SDL_Event *event);
 
-lv_indev_t *lv_sdl_init_pointer_input(void);
+lv_indev_t *lv_sdl_init_pointer(void);
 
-void lv_sdl_deinit_pointer_input(void);
+lv_indev_t *lv_sdl_init_scroll(void);
 
 #define WINDOW_TITLE "LVGL Sample [HW]"
 
@@ -43,13 +45,27 @@ static void lv_demo_hw_accel() {
     }
 }
 
+static void lv_demo_long_list() {
+    lv_obj_t *win = lv_win_create(lv_scr_act(), 40);
+    lv_win_add_title(win, "Long List");
+    lv_obj_t *content = lv_win_get_content(win);
+    const static lv_coord_t cells_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    lv_obj_set_grid_dsc_array(content, cells_dsc, cells_dsc);
+    lv_obj_t *list = lv_list_create(content);
+    lv_obj_set_grid_cell(list, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    for (int i = 0; i < 200; i++) {
+        lv_list_add_btn(list, LV_SYMBOL_DUMMY, "Item");
+    }
+}
+
 typedef struct lv_demo_entry_t {
     void (*action)();
 
     const char *title;
 } lv_demo_entry_t;
 
-static const lv_demo_entry_t demo_entries[4] = {
+static const lv_demo_entry_t demo_entries[] = {
+        {lv_demo_long_list, "Long List"},
         {lv_demo_hw_accel,  "Hardware Accel Playground"},
         {lv_demo_widgets,   "Widgets"},
         {lv_demo_music,     "Music Player"},
@@ -92,9 +108,10 @@ int main(int argc, char *argv[]) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                           SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     lv_init();
     lv_disp_t *disp = lv_sdl_display_init(window);
-    lv_sdl_init_pointer_input();
+    indev_init(window);
 
     lv_demo_entry();
 
@@ -117,40 +134,10 @@ int main(int argc, char *argv[]) {
             framecount++;
         }
     }
-    lv_sdl_deinit_pointer_input();
     lv_sdl_display_deinit(disp);
 //    lv_deinit();
     SDL_DestroyWindow(window);
     return 0;
-}
-
-static void sdl_input_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
-    (void) drv;
-    static SDL_Event e;
-    data->continue_reading = SDL_PeepEvents(&e, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEBUTTONUP) > 0;
-    static lv_indev_state_t state = LV_INDEV_STATE_REL;
-    if (e.type == SDL_MOUSEBUTTONDOWN) {
-        state = LV_INDEV_STATE_PR;
-        data->point = (lv_point_t) {.x = e.button.x, .y = e.button.y};
-    } else if (e.type == SDL_MOUSEBUTTONUP) {
-        state = LV_INDEV_STATE_REL;
-        data->point = (lv_point_t) {.x = e.button.x, .y = e.button.y};
-    } else {
-        data->point = (lv_point_t) {.x = e.motion.x, .y = e.motion.y};
-    }
-    data->state = state;
-}
-
-lv_indev_t *lv_sdl_init_pointer_input(void) {
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = sdl_input_read;
-
-    return lv_indev_drv_register(&indev_drv);
-}
-
-void lv_sdl_deinit_pointer_input(void) {
 }
 
 static int app_event_filter(void *userdata, SDL_Event *event) {
@@ -167,6 +154,10 @@ static int app_event_filter(void *userdata, SDL_Event *event) {
             }
             break;
         }
+        case SDL_SYSWMEVENT: {
+            indev_handle_syswm_evt(&event->syswm);
+            break;
+        }
 //        case SDL_RENDER_TARGETS_RESET: {
 //            lv_disp_t *disp = lv_disp_get_default();
 //            SDL_RenderClear((SDL_Renderer *) lv_disp_get_draw_buf(disp)->buf_act);
@@ -177,15 +168,21 @@ static int app_event_filter(void *userdata, SDL_Event *event) {
             running = SDL_FALSE;
             break;
         }
+        case SDL_MOUSEWHEEL: {
+//            SDL_Log("SDL_MOUSEWHEEL: mw scroll %d, %d\n", event->wheel.x, event->wheel.y);
+            break;
+        }
 //        case SDL_KEYDOWN:
 //        case SDL_KEYUP:
         case SDL_MOUSEMOTION:
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
+        case INDEV_SCROLL:
 //        case SDL_MOUSEWHEEL:
             return 1;
-        default:
+        default: {
             return 0;
+        }
     }
     return 0;
 }
