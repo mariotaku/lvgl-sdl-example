@@ -4,6 +4,7 @@
 #include "gpu/lv_gpu_sdl.h"
 #include "lvgl.h"
 #include "lv_demos/lv_demo.h"
+#include "lvgl/examples/lv_examples.h"
 #include "input_drv/indev_sdl.h"
 
 
@@ -45,43 +46,6 @@ static void lv_demo_hw_accel() {
     }
 }
 
-static void lv_demo_long_list() {
-    lv_obj_t *win = lv_win_create(lv_scr_act(), 40);
-    lv_win_add_title(win, "Long List");
-    lv_obj_t *content = lv_win_get_content(win);
-    const static lv_coord_t cells_dsc[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
-    lv_obj_set_grid_dsc_array(content, cells_dsc, cells_dsc);
-    lv_obj_t *list = lv_list_create(content);
-    lv_obj_set_grid_cell(list, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    for (int i = 0; i < 200; i++) {
-        lv_list_add_btn(list, LV_SYMBOL_DUMMY, "Item");
-    }
-}
-
-static void lv_demo_unicode() {
-    lv_obj_t *win = lv_win_create(lv_scr_act(), 40);
-    lv_win_add_title(win, "Unicode Font Support");
-    lv_obj_t *content = lv_win_get_content(win);
-    lv_obj_t *ltr_label = lv_label_create(content);
-    lv_label_set_text(ltr_label, "In modern terminology, a microcontroller is similar to a system on a chip (SoC).");
-    lv_obj_set_style_text_font(ltr_label, &lv_font_montserrat_16, 0);
-    lv_obj_set_width(ltr_label, 310);
-    lv_obj_align(ltr_label, LV_ALIGN_TOP_LEFT, 5, 5);
-
-    lv_obj_t *rtl_label = lv_label_create(content);
-    lv_label_set_text(rtl_label, "מעבד, או בשמו המלא יחידת עיבוד מרכזית (באנגלית: CPU - Central Processing Unit).");
-    lv_obj_set_style_base_dir(rtl_label, LV_BASE_DIR_RTL, 0);
-    lv_obj_set_style_text_font(rtl_label, &lv_font_dejavu_16_persian_hebrew, 0);
-    lv_obj_set_width(rtl_label, 310);
-    lv_obj_align(rtl_label, LV_ALIGN_LEFT_MID, 5, 0);
-
-    lv_obj_t *cz_label = lv_label_create(content);
-    lv_label_set_text(cz_label, "嵌入式系统（Embedded System），\n是一种嵌入机械或电气系统内部、具有专一功能和实时计算性能的计算机系统。");
-    lv_obj_set_style_text_font(cz_label, &lv_font_simsun_16_cjk, 0);
-    lv_obj_set_width(cz_label, 310);
-    lv_obj_align(cz_label, LV_ALIGN_BOTTOM_LEFT, 5, -5);
-}
-
 typedef struct lv_demo_entry_t {
     void (*action)();
 
@@ -89,13 +53,26 @@ typedef struct lv_demo_entry_t {
 } lv_demo_entry_t;
 
 static const lv_demo_entry_t demo_entries[] = {
-        {lv_demo_long_list, "Long List"},
-        {lv_demo_hw_accel,  "Hardware Accel Playground"},
-        {lv_demo_widgets,   "Widgets"},
-        {lv_demo_music,     "Music Player"},
-        {lv_demo_benchmark, "Benchmark"},
-        {lv_demo_unicode,   "Unicode Fonts"},
-//        {lv_demo_stress,    "Stress Test"},
+        {NULL,                "Demos"},
+        {lv_demo_widgets,     "Widgets"},
+        {lv_demo_music,       "Music Player"},
+        {lv_demo_benchmark,   "Benchmark"},
+        {lv_demo_stress,      "Stress Test"},
+        {lv_demo_hw_accel,    "HW Accel Playground"},
+        {NULL,                "Chart Examples"},
+        {lv_example_chart_1,  "Chart 1"},
+        {lv_example_chart_2,  "Chart 2"},
+        {lv_example_chart_3,  "Chart 3"},
+        {lv_example_chart_4,  "Chart 4"},
+        {lv_example_chart_5,  "Chart 5"},
+        {lv_example_chart_6,  "Chart 6"},
+        {lv_example_chart_7,  "Chart 7"},
+        {NULL,                "Label Examples"},
+        {lv_example_label_1,  "Line wrap, re-color, line align and text scrolling"},
+        {lv_example_label_2,  "Fake Shadow"},
+        {lv_example_label_3,  "LTR, RTL and Chinese label"},
+        {NULL,                "Scroll Examples"},
+        {lv_example_scroll_6, "Scroll 6"},
 };
 static const size_t demo_entry_size = sizeof(demo_entries) / sizeof(lv_demo_entry_t);
 
@@ -118,8 +95,13 @@ void lv_demo_entry() {
     lv_obj_set_grid_cell(list, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
 //    lv_obj_set_size(list, lv_obj_get_content_width(lv_scr_act()), lv_obj_get_content_height(lv_scr_act()));
     for (int i = 0; i < demo_entry_size; i++) {
-        lv_obj_t *item = lv_list_add_btn(list, LV_SYMBOL_DUMMY, demo_entries[i].title);
-        lv_obj_add_event_cb(item, lv_demo_entry_handle_item, LV_EVENT_CLICKED, demo_entries[i].action);
+        lv_demo_entry_t entry = demo_entries[i];
+        if (entry.action) {
+            lv_obj_t *item = lv_list_add_btn(list, LV_SYMBOL_DUMMY, entry.title);
+            lv_obj_add_event_cb(item, lv_demo_entry_handle_item, LV_EVENT_CLICKED, entry.action);
+        } else {
+            lv_list_add_text(list, entry.title);
+        }
     }
 }
 
@@ -136,6 +118,8 @@ int main(int argc, char *argv[]) {
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     lv_init();
     lv_disp_t *disp = lv_sdl_display_init(window);
+    disp->theme->font_small = &lv_font_montserrat_12;
+    disp->theme->font_large = &lv_font_montserrat_16;
     indev_init(window);
 
     lv_demo_entry();

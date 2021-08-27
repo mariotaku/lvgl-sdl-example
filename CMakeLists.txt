@@ -45,6 +45,9 @@ target_sources(lv_examples PRIVATE ${LV_EXAMPLES_ASSETS})
 
 add_executable(example main.c input_drv/indev_sdl.c input_drv/syswm_win.c)
 
+file(GLOB_RECURSE LVGL_EXAMPLE_SOURCES lvgl/examples/*.c)
+target_sources(example PRIVATE ${LVGL_EXAMPLE_SOURCES})
+
 if (MINGW)
     target_link_libraries(example PRIVATE mingw32)
 endif()
