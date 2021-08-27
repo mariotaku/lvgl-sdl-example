@@ -26,11 +26,36 @@ static void lv_demo_hw_accel() {
     lv_obj_t *labels[cols * rows];
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            lv_obj_t *item;
-            switch (lv_rand(0, 1)) {
+            lv_obj_t *item = NULL;
+            switch (lv_rand(0, 3)) {
                 case 1:
-                    item = lv_spinner_create(scr, 1000, 60);
+                    item = lv_spinner_create(scr, 10000, 60);
                     break;
+                case 2: {
+                    item = lv_obj_create(scr);
+                    lv_obj_set_style_radius(item, LV_RADIUS_CIRCLE, 0);
+                    lv_obj_set_style_clip_corner(item, true, 0);
+                    lv_obj_t *label = lv_label_create(item);
+                    lv_label_set_text(label, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
+                                             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                    break;
+                }
+                case 3: {
+                    item = lv_obj_create(scr);
+                    lv_obj_set_style_bg_color(item, lv_palette_main(LV_PALETTE_RED), 0);
+                    lv_obj_set_style_radius(item, LV_RADIUS_CIRCLE, 0);
+                    lv_obj_set_style_clip_corner(item, true, 0);
+                    lv_obj_t *obj2 = lv_obj_create(item);
+                    lv_obj_set_pos(obj2, 30, 30);
+                    lv_obj_set_style_bg_color(obj2, lv_palette_main(LV_PALETTE_BLUE), 0);
+                    break;
+                }
                 default: {
                     item = lv_btn_create(scr);
                     lv_obj_t *label = lv_label_create(item);
@@ -38,7 +63,7 @@ static void lv_demo_hw_accel() {
                     break;
                 }
             }
-
+            SDL_assert(item);
             lv_obj_set_size(item, 100, 100);
             lv_obj_set_pos(item, col * 120 + 10, row * 120 + 10);
             labels[row * cols + col] = item;
@@ -59,6 +84,9 @@ static const lv_demo_entry_t demo_entries[] = {
         {lv_demo_benchmark,   "Benchmark"},
         {lv_demo_stress,      "Stress Test"},
         {lv_demo_hw_accel,    "HW Accel Playground"},
+        {NULL,                "Arc Examples"},
+        {lv_example_arc_1,    "Arc 1"},
+        {lv_example_arc_2,    "Arc 2"},
         {NULL,                "Chart Examples"},
         {lv_example_chart_1,  "Chart 1"},
         {lv_example_chart_2,  "Chart 2"},
@@ -111,10 +139,13 @@ int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         return 1;
     }
-    int width = 1280, height = 800;
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-    SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
-                                          SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_DisplayMode mode;
+    SDL_GetDesktopDisplayMode(0, &mode);
+    mode.w = 1280;
+    mode.h = 800;
+    SDL_Window *window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                          mode.w, mode.h, SDL_WINDOW_ALLOW_HIGHDPI);
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
     lv_init();
     lv_disp_t *disp = lv_sdl_display_init(window);

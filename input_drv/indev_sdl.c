@@ -49,19 +49,22 @@ void indev_handle_syswm_evt(SDL_SysWMEvent *event) {
 
 static void indev_pointer_read(lv_indev_drv_t *drv, lv_indev_data_t *data) {
     (void) drv;
-    static SDL_Event e;
+    SDL_Event e;
     data->continue_reading = SDL_PeepEvents(&e, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEBUTTONUP) > 0;
-    static lv_indev_state_t state = LV_INDEV_STATE_RELEASED;
-    if (e.type == SDL_MOUSEBUTTONDOWN) {
-        state = LV_INDEV_STATE_PRESSED;
-        data->point = (lv_point_t) {.x = e.button.x, .y = e.button.y};
-    } else if (e.type == SDL_MOUSEBUTTONUP) {
-        state = LV_INDEV_STATE_RELEASED;
-        data->point = (lv_point_t) {.x = e.button.x, .y = e.button.y};
-    } else {
-        data->point = (lv_point_t) {.x = e.motion.x, .y = e.motion.y};
+    if (!data->continue_reading) {
+        int x, y;
+        data->state = SDL_GetMouseState(&x, &y) != 0;
+        data->point.x = (lv_coord_t) x;
+        data->point.y = (lv_coord_t) y;
+        return;
     }
-    data->state = state;
+    if (e.type == SDL_MOUSEMOTION) {
+        data->state = e.motion.state;
+        data->point = (lv_point_t) {.x = e.motion.x, .y = e.motion.y};
+    } else {
+        data->state = e.button.state;
+        data->point = (lv_point_t) {.x = e.button.x, .y = e.button.y};
+    }
 }
 
 lv_indev_t *lv_sdl_init_pointer() {
