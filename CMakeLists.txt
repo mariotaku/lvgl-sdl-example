@@ -44,11 +44,18 @@ file(GLOB_RECURSE LV_EXAMPLES_ASSETS lvgl/examples/assets/*.c)
 target_sources(lv_examples PRIVATE ${LV_EXAMPLES_ASSETS})
 
 add_executable(example main.c input_drv/indev_sdl.c input_drv/syswm_win.c)
-target_link_libraries(example PRIVATE lvgl lv_examples SDL2::SDL2)
 
-if (MINGW OR MSVC)
-    target_link_libraries(example PUBLIC SDL2::SDL2main)
+if (MINGW)
+    target_link_libraries(example PRIVATE mingw32)
+endif()
+
+if (SDL2MAIN_LIBRARIES)
+    target_link_libraries(example PRIVATE SDL2::SDL2main)
+else()
+    target_link_libraries(example PRIVATE SDL2::SDL2)
 endif ()
+
+target_link_libraries(example PRIVATE lvgl lv_examples)
 
 if (WINHID_FOUND)
     target_link_libraries(example PRIVATE ${WINHID_LIBRARY})
